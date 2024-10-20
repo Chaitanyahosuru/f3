@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiple Timers</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+      body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+}
+
+.timer-input-section {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.timer-input-section input {
+    margin: 5px 0;
+    padding: 10px;
+    width: 100px;
+}
+
+.active-timers-display-section {
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+}
+
+.timer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin: 5px 0;
+}
+
+.timer.finished {
+    background-color: #ffcccc;
+}
+
+    </style>
+</head>
+<body>
+    <div class="timer-input-section">
+        <h1>Set a Timer</h1>
+        <input type="number" id="hours" placeholder="Hours" min="0">
+        <input type="number" id="minutes" placeholder="Minutes" min="0" max="59">
+        <input type="number" id="seconds" placeholder="Seconds" min="0" max="59">
+        <button id="start-timer">Start New Timer</button>
+    </div>
+    <div class="active-timers-display-section">
+        <h2>Active Timers</h2>
+        <ul id="timers-list"></ul>
+    </div>
+    <audio id="timer-end-sound" src="alert.mp3"></audio>
+    <script src="script.js">
+      document.getElementById('start-timer').addEventListener('click', startTimer);
+
+const timers = [];
+
+function startTimer() {
+    const hours = parseInt(document.getElementById('hours').value) || 0;
+    const minutes = parseInt(document.getElementById('minutes').value) || 0;
+    const seconds = parseInt(document.getElementById('seconds').value) || 0;
+
+    const totalTime = (hours * 3600) + (minutes * 60) + seconds;
+
+    if (totalTime <= 0) {
+        alert("Please enter a valid time.");
+        return;
+    }
+
+    const timer = {
+        timeRemaining: totalTime,
+        intervalId: null
+    };
+
+    timers.push(timer);
+    updateTimersDisplay();
+    startCountdown(timer);
+}
+
+function startCountdown(timer) {
+    timer.intervalId = setInterval(() => {
+        timer.timeRemaining--;
+        updateTimersDisplay();
+
+        if (timer.timeRemaining <= 0) {
+            clearInterval(timer.intervalId);
+            playAlert();
+            markTimerAsFinished(timer);
+        }
+    }, 1000);
+}
+
+function updateTimersDisplay() {
+    const timersList = document.getElementById('timers-list');
+    timersList.innerHTML = '';
+
+    timers.forEach((timer, index) => {
+        const li = document.createElement('li');
+        const minutes = Math.floor(timer.timeRemaining / 60);
+        const seconds = timer.timeRemaining % 60;
+
+        li.className = 'timer';
+        li.innerHTML = `
+            ${minutes}m ${seconds}s 
+            <button onclick="stopTimer(${index})">Stop Timer</button>
+        `;
+
+        if (timer.timeRemaining <= 0) {
+            li.classList.add('finished');
+        }
+
+        timersList.appendChild(li);
+    });
+}
+
+function stopTimer(index) {
+    clearInterval(timers[index].intervalId);
+    timers.splice(index, 1);
+    updateTimersDisplay();
+}
+
+function playAlert() {
+    const audio = document.getElementById('timer-end-sound');
+    audio.play();
+}
+
+function markTimerAsFinished(timer) {
+    const index = timers.indexOf(timer);
+    if (index > -1) {
+        timers.splice(index, 1);
+        updateTimersDisplay();
+    }
+}
+
+    </script>
+</body>
+</html>
